@@ -28,8 +28,8 @@ Ensure you have the following installed:
 1.  **Clone the Repository**
 
     ```bash
-git clone <your-repo-url>
-cd turborag-rs
+    git clone https://github.com/wonderfuldestruction/turborag-rs
+    cd turborag-rs
     ```
 
 2.  **Database Setup (PostgreSQL with pgvector)**
@@ -37,42 +37,42 @@ cd turborag-rs
     Create a `docker-compose.yml` file in your project root (or a dedicated `db` folder) with the following content. Replace `your_user`, `your_password`, and `your_database` with your desired credentials.
 
     ```yaml
-version: '3.8'
-services:
-  db:
-    image: "ankane/pgvector:latest"
-    restart: always
-    environment:
-      POSTGRES_USER: your_user
-      POSTGRES_PASSWORD: your_password
-      POSTGRES_DB: your_database
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+    version: '3.8'
+    services:
+      db:
+        image: "ankane/pgvector:latest"
+        restart: always
+        environment:
+          POSTGRES_USER: your_user
+          POSTGRES_PASSWORD: your_password
+          POSTGRES_DB: your_database
+        ports:
+          - "5432:5432"
+        volumes:
+          - db_data:/var/lib/postgresql/data
 
-volumes:
-  db_data:
+    volumes:
+      db_data:
     ```
 
     Start the database:
 
     ```bash
-docker-compose up -d db
+    docker-compose up -d db
     ```
 
     Once the database is running, connect to it (e.g., using `psql`) and enable the `vector` extension and create the `embeddings` table:
 
     ```sql
-CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE IF NOT EXISTS embeddings (
-    id TEXT PRIMARY KEY,
-    text TEXT NOT NULL,
-    vector VECTOR(2560), -- Adjust dimension based on your embedding model
-    metadata JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+    CREATE TABLE IF NOT EXISTS embeddings (
+        id TEXT PRIMARY KEY,
+        text TEXT NOT NULL,
+        vector VECTOR(2560), -- Adjust dimension based on your embedding model
+        metadata JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    );
     ```
 
 3.  **Ollama Model Setup**
@@ -80,8 +80,8 @@ CREATE TABLE IF NOT EXISTS embeddings (
     Ensure Ollama is running. Then, pull the recommended models. These models are optimized for performance and context length (32k tokens).
 
     ```bash
-ollama run dengcao/Qwen3-Embedding-4B:Q4_K_M
-ollama run hf.co/mradermacher/Qwen3-Reranker-4B-GGUF:Q4_K_M
+    ollama run dengcao/Qwen3-Embedding-4B:Q4_K_M
+    ollama run hf.co/mradermacher/Qwen3-Reranker-4B-GGUF:Q4_K_M
     ```
 
     *Note: Both models are Q4_K_M quantized and require at least 2.5GB VRAM each for an 8k token base context window. They run concurrently during query. If VRAM is a constraint, the embedding model can serve as a reranker. GPU inference is recommended for best results; CPU users might consider `Qwen3 0.6B Embedding @ Q4_K_M` (484MB) for 32k context.*
@@ -91,13 +91,13 @@ ollama run hf.co/mradermacher/Qwen3-Reranker-4B-GGUF:Q4_K_M
     Set the `DATABASE_URL` environment variable to match your PostgreSQL connection details:
 
     ```bash
-export DATABASE_URL="postgres://your_user:your_password@localhost:5432/your_database"
+    export DATABASE_URL="postgres://your_user:your_password@localhost:5432/your_database"
     ```
 
 5.  **Build the Project**
 
     ```bash
-cargo build --release
+    cargo build --release
     ```
 
 ## Usage
@@ -107,7 +107,7 @@ cargo build --release
     Run the `rag-system` binary to scan your codebase, generate embeddings, and store them in the database. This process can take time depending on your codebase size.
 
     ```bash
-cargo run --release --bin rag-system
+    cargo run --release --bin rag-system
     ```
 
 2.  **Query the Codebase**
@@ -115,13 +115,13 @@ cargo run --release --bin rag-system
     Use the `query` binary to ask natural language questions about your codebase.
 
     ```bash
-cargo run --release --bin query -- --query "Explain the core functionalities of the ABC and XYZ modules."
+    cargo run --release --bin query -- --query "Explain the core functionalities of the ABC and XYZ modules."
     ```
 
     Configurable in `src/bin/query.rs`, you can also manually adjust the `--limit` (initial documents to retrieve) and `--top-n` (final reranked documents to display) parameters:
 
     ```bash
-cargo run --release --bin query -- --query "How do I handle errors in the API module?" --limit 50 --top-n 10
+    cargo run --release --bin query -- --query "How do I handle errors in the API module?" --limit 50 --top-n 10
     ```
 
 ## Benchmarks
